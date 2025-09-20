@@ -5,9 +5,17 @@
   "scripts": {
     "test": "echo \"Error: no test specified\" && exit 1"
   },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Pending-Status/CalendarMeet.git"
+  },
   "keywords": [],
   "author": "",
   "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Pending-Status/CalendarMeet/issues"
+  },
+  "homepage": "https://github.com/Pending-Status/CalendarMeet#readme",
   "description": "",
   "dependencies": {
     "express": "^5.1.0"
