@@ -10,6 +10,10 @@ app.get('/bryan', (req, res) => {
     res.send('Hello from Bryan! I love basketball and coding projects.');
 });
 
+app.get('/emily', (req, res) => {
+    res.send('Hello, I\'m Emily! I enjoy game development and art.');
+});
+
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
 });
