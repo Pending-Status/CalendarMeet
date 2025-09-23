@@ -14,6 +14,10 @@ app.get('/emily', (req, res) => {
     res.send('Hello, I\'m Emily! I enjoy game development and art.');
 });
 
+app.get('/erik', (req, res) => {
+    res.send('Hello, my name is Erik. My interests include gaming and cybersecurity.')
+})
+
 app.listen(PORT, () => {
     console.log(`Server running at http://localhost:${PORT}`);
 });
