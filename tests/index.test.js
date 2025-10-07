@@ -1,5 +1,5 @@
-const request = require('supertest');
-const app = require('../index');
+import request from 'supertest';
+import app from"../index.js";
 
 describe('Express App Routes', () => {
   test('GET / should return Team Pending Status message', async () => {
