@@ -1,0 +1,198 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>FullCalendar Demo</title>
+
+    <!-- FullCalendar v6 (global bundle) -->
+    <script src="https://cdn.jsdelivr.net/npm/fullcalendar@6.1.19/index.global.min.js"></script>
+
+    <style>
+      :root {
+        --gap: 12px;
+      }
+      body {
+        margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, sans-serif; background:#0b1020; color:#e9ecf1;
+      }
+      header {
+        padding: 14px 16px; display:flex; align-items:center; gap:var(--gap); border-bottom:1px solid #20263a; position:sticky; top:0; background:#0b1020; z-index:2;
+      }
+      header h1 { font-size: 18px; margin: 0; font-weight: 600; }
+      header .info { opacity:.8; font-size: 13px; }
+      .wrap { padding: var(--gap); max-width: 1200px; margin: 0 auto; }
+      #calendar { background:#0f1530; border:1px solid #20263a; border-radius: 14px; padding: 8px; }
+      .actions { display:flex; gap:8px; align-items:center; flex-wrap:wrap; margin-bottom: 10px; }
+      button {
+        border:1px solid #2a3456; background:#12193c; color:#e9ecf1; padding:8px 10px; border-radius:10px; cursor:pointer;
+      }
+      button:hover { filter:brightness(1.1);
+      }
+      .status { font-size: 12px; opacity:.8; }
+      .toast { position: fixed; right: 14px; bottom:14px; background:#111a3d; padding:10px 12px; border:1px solid #263056; border-radius:10px; box-shadow:0 6px 24px rgba(0,0,0,.35); display:none; }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1>FullCalendar — Standalone Demo</h1>
+    </header>
+
+    <div class="wrap">
+      <div class="actions">
+        <button id="todayBtn">Today</button>
+        <button id="prevBtn">Prev</button>
+        <button id="nextBtn">Next</button>
+        <button id="addBtn">Add Quick Event</button>
+        <span class="status" id="status"></span>
+      </div>
+      <div id="calendar"></div>
+    </div>
+
+    <div class="toast" id="toast"></div>
+
+    <script>
+      // ---- Config ----
+      const API = new URL(location.href).searchParams.get('api') || 'http://localhost:4000';
+
+      const toast = (msg) => {
+        const el = document.getElementById('toast');
+        el.textContent = msg;
+        el.style.display = 'block';
+        setTimeout(() => (el.style.display = 'none'), 2000);
+      };
+
+      const status = (msg) => (document.getElementById('status').textContent = msg || '');
+
+      document.addEventListener('DOMContentLoaded', function () {
+        const calendarEl = document.getElementById('calendar');
+        const calendar = new FullCalendar.Calendar(calendarEl, {
+                    initialView: 'timeGridWeek',
+          headerToolbar: false,
+          height: '80vh',
+          navLinks: true,
+          selectable: true,
+          selectMirror: true,
+          editable: true,
+          nowIndicator: true,
+          eventTimeFormat: { hour: '2-digit', minute: '2-digit' },
+
+          // Load events from API based on current visible dates
+          events: async function (info, success, failure) {
+            try {
+              status('Loading…');
+              const params = new URLSearchParams({ start: info.startStr, end: info.endStr });
+              const res = await fetch(`${API}/events?${params.toString()}`);
+              if (!res.ok) throw new Error(`Failed to load events (${res.status})`);
+              const data = await res.json();
+              success(data);
+              status('');
+            } catch (err) {
+              console.error(err);
+              status('Load failed');
+              failure(err instanceof Error ? err : new Error(String(err)));
+            }
+          },
+
+          // Click on a single day/time to add an event
+          dateClick: async function (arg) {
+            const title = prompt('Event title?');
+            if (!title) return;
+            try {
+              const payload = { title, start: arg.dateStr, allDay: arg.allDay };
+              const res = await fetch(`${API}/events`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(payload),
+              });
+              if (!res.ok) throw new Error('Failed to create');
+              toast('Created');
+              calendar.refetchEvents();
+            } catch (e) {
+              toast('Create failed');
+              console.error(e);
+            }
+          },
+
+          // Drag/resize updates
+          eventDrop: async function (info) {
+            try {
+              const { id, start, end } = info.event;
+              const res = await fetch(`${API}/events/${id}/move`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ start: start?.toISOString(), end: end?.toISOString() }),
+              });
+              if (!res.ok) throw new Error('Move failed');
+              toast('Updated');
+            } catch (e) {
+              toast('Update failed');
+              console.error(e);
+              info.revert();
+            }
+          },
+          eventResize: async function (info) {
+            try {
+              const { id, start, end } = info.event;
+              const res = await fetch(`${API}/events/${id}/move`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ start: start?.toISOString(), end: end?.toISOString() }),
+              });
+              if (!res.ok) throw new Error('Resize failed');
+              toast('Resized');
+            } catch (e) {
+              toast('Resize failed');
+              console.error(e);
+              info.revert();
+            }
+          },
+
+          // Delete on click
+          eventClick: async function (info) {
+            const ok = confirm(`Delete "${info.event.title}"?`);
+            if (!ok) return;
+            try {
+              const res = await fetch(`${API}/events/${info.event.id}`, { method: 'DELETE' });
+              if (!res.ok) throw new Error('Delete failed');
+              toast('Deleted');
+              calendar.refetchEvents();
+            } catch (e) {
+              toast('Delete failed');
+              console.error(e);
+            }
+          },
+
+          loading: function (isLoading) {
+            status(isLoading ? 'Loading…' : '');
+          },
+        });
+
+        calendar.render();
+
+        // Toolbar buttons
+        document.getElementById('todayBtn').onclick = () => calendar.today();
+        document.getElementById('prevBtn').onclick = () => calendar.prev();
+        document.getElementById('nextBtn').onclick = () => calendar.next();
+        document.getElementById('addBtn').onclick = async () => {
+          const title = prompt('Event title?');
+          if (!title) return;
+          const start = new Date();
+          const end = new Date(start.getTime() + 60 * 60 * 1000);
+          try {
+            const res = await fetch(`${API}/events`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ title, start: start.toISOString(), end: end.toISOString() }),
+            });
+            if (!res.ok) throw new Error('Create failed');
+            toast('Created');
+            calendar.refetchEvents();
+          } catch (e) {
+            toast('Create failed');
+            console.error(e);
+          }
+        };
+      });
+    </script>
+  </body>
+</html>
