@@ -1,16 +1,15 @@
+import React from "react";
 import Navbar from "./components/Navbar";
 import HeroSection from "./components/HeroSection";
-import AboutSection from "./components/AboutSection";
-import TeamSection from "./components/TeamSection";
+import EventsSection from "./components/EventsSection";
 
 function App() {
   return (
-    <div className="bg-gray-50 min-h-screen text-gray-800">
+    <>
       <Navbar />
       <HeroSection />
-      <AboutSection />
-      <TeamSection />
-    </div>
+      <EventsSection />
+    </>
   );
 }
 

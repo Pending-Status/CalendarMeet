@@ -1,18 +1,14 @@
-export default function Navbar() {
-  return (
-    <header className="bg-gradient-to-r from-green-800 to-amber-400 text-white shadow-md">
-      <div className="flex items-center justify-between px-10 py-4">
-        <div className="flex items-center space-x-3">
-          <span className="text-3xl">📅</span>
-          <h1 className="text-2xl font-bold">CalendarMeet</h1>
-        </div>
+import React from "react";
 
-        <nav className="flex space-x-8 font-medium">
-          <a href="#about" className="hover:text-yellow-200">About</a>
-          <a href="#team" className="hover:text-yellow-200">Team</a>
-          <a href="#projects" className="hover:text-yellow-200">Projects</a>
-        </nav>
-      </div>
-    </header>
+const Navbar = () => {
+  return (
+    <nav className="flex justify-between items-center px-8 py-4 bg-gradient-to-r from-green-700 to-yellow-500 text-white shadow-md">
+      <h1 className="text-xl font-bold">CalendarMeet</h1>
+      <button className="bg-white text-green-700 font-semibold px-5 py-2 rounded-full hover:bg-green-50 transition">
+        Create Event
+      </button>
+    </nav>
   );
-}
+};
+
+export default Navbar;
