@@ -97,7 +97,8 @@ jobs:
             cd /home/ec2-user/calendarmeet-app
             npm ci
             pkill -f "node server.js" || true
+            sleep 2
             nohup node server.js > log.txt 2>&1 &
-            echo "Deployment complete"
+            exit 0
 
 
