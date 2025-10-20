@@ -47,6 +47,17 @@ jobs:
             npm run build
           fi
 
+      # Upload build and server files as artifact
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v3
+        with:
+          name: calendarmeet-dist
+          path: |
+            calendarmeet-app/dist
+            server.js
+            package.json
+            package-lock.json
+
   deploy-to-ec2:
     runs-on: ubuntu-latest
     needs: build-and-test
@@ -56,7 +67,14 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Upload only the necessary files to EC2
+      # Download build artifact from previous job
+      - name: Download build artifact
+        uses: actions/download-artifact@v3
+        with:
+          name: calendarmeet-dist
+          path: ./calendarmeet
+
+      # Copy project files to EC2
       - name: Copy project files to EC2
         uses: appleboy/scp-action@master
         with:
@@ -64,14 +82,10 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_KEY }}
           port: 22
-          source: |
-            package.json
-            package-lock.json
-            server.js
-            calendarmeet-app/dist
-          target: /home/ec2-user/calendarmeet
+          source: ./calendarmeet
+          target: /home/ec2-user/calendarmeet-app
 
-      # SSH into EC2 to install dependencies and restart Node server
+      # SSH into EC2 and restart Node server
       - name: SSH and restart Node server
         uses: appleboy/ssh-action@v0.1.9
         with:
@@ -80,12 +94,9 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           port: 22
           script: |
-            cd /home/ec2-user/calendarmeet
-            # Install/update Node dependencies
+            cd /home/ec2-user/calendarmeet-app
             npm ci
-            # Stop any existing server (safe way)
             pkill -f "node server.js" || true
-            # Start the server in the background
             nohup node server.js > log.txt 2>&1 &
             echo "Deployment complete"
 
