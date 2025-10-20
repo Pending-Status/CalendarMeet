@@ -86,7 +86,7 @@ jobs:
             ./calendarmeet/server.js
             ./calendarmeet/package.json
             ./calendarmeet/package-lock.json
-            ./calendarmeet/dist
+            ./calendarmeet-app/dist
           target: /home/ec2-user/calendarmeet-app
 
       # SSH into EC2 and restart Node server
