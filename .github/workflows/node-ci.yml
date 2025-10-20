@@ -47,46 +47,46 @@ jobs:
             npm run build
           fi
 
-deploy-to-ec2:
-  runs-on: ubuntu-latest
-  needs: build-and-test
-  if: github.ref == 'refs/heads/main' 
-  steps:
-    # Checkout code again
-    - name: Checkout repository
-      uses: actions/checkout@v4
+  deploy-to-ec2:
+    runs-on: ubuntu-latest
+    needs: build-and-test
+    if: github.ref == 'refs/heads/main' 
+    steps:
+      # Checkout code again
+      - name: Checkout repository
+        uses: actions/checkout@v4
 
-    # Upload only the necessary files to EC2
-    - name: Copy project files to EC2
-      uses: appleboy/scp-action@master
-      with:
-        host: ec2-3-133-115-8.us-east-2.compute.amazonaws.com
-        username: ec2-user
-        key: ${{ secrets.EC2_KEY }}
-        port: 22
-        source: |
-          package.json
-          package-lock.json
-          server.js
-          calendarmeet-app/dist
-        target: /home/ec2-user/calendarmeet
+      # Upload only the necessary files to EC2
+      - name: Copy project files to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ec2-3-133-115-8.us-east-2.compute.amazonaws.com
+          username: ec2-user
+          key: ${{ secrets.EC2_KEY }}
+          port: 22
+          source: |
+            package.json
+            package-lock.json
+            server.js
+            calendarmeet-app/dist
+          target: /home/ec2-user/calendarmeet
 
-    # SSH into EC2 to install dependencies and restart Node server
-    - name: SSH and restart Node server
-      uses: appleboy/ssh-action@v0.1.9
-      with:
-        host: ec2-3-133-115-8.us-east-2.compute.amazonaws.com
-        username: ec2-user
-        key: ${{ secrets.EC2_KEY }}
-        port: 22
-        script: |
-          cd /home/ec2-user/calendarmeet
-          # Install/update Node dependencies
-          npm ci
-          # Stop any existing server (safe way)
-          pkill -f "node server.js" || true
-          # Start the server in the background
-          nohup node server.js > log.txt 2>&1 &
-          echo "Deployment complete"
+      # SSH into EC2 to install dependencies and restart Node server
+      - name: SSH and restart Node server
+        uses: appleboy/ssh-action@v0.1.9
+        with:
+          host: ec2-3-133-115-8.us-east-2.compute.amazonaws.com
+          username: ec2-user
+          key: ${{ secrets.EC2_KEY }}
+          port: 22
+          script: |
+            cd /home/ec2-user/calendarmeet
+            # Install/update Node dependencies
+            npm ci
+            # Stop any existing server (safe way)
+            pkill -f "node server.js" || true
+            # Start the server in the background
+            nohup node server.js > log.txt 2>&1 &
+            echo "Deployment complete"
 
 
