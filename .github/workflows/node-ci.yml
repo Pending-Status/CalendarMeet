@@ -68,7 +68,9 @@ jobs:
           port: 22
           script: |
             cd ~/calendarmeet-app
-            # Kill any existing server.js processes
-            pkill -f "node server.js" || true
-            # Start the server in background
-            nohup node server.js > log.txt 2>&1 &
+            # Stop existing server if running
+            pm2 delete server || true
+            # Start server with pm2
+            pm2 start server.js --name server
+            # Save pm2 process list to respawn on reboot
+            pm2 save
