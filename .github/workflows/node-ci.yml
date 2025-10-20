@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  build-and-test:
+  build-test-deploy:
     runs-on: ubuntu-latest
 
     steps:
@@ -46,3 +46,29 @@ jobs:
             npm ci
             npm run build
           fi
+
+      # Copy entire project to EC2
+      - name: Copy project to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ec2-3-133-115-8.us-east-2.compute.amazonaws.com
+          username: ec2-user
+          port: 22
+          key: ${{ secrets.EC2_KEY }}
+          source: "."
+          target: "~/calendarmeet-app"
+
+      # Start Node.js server on EC2
+      - name: Start Node.js server
+        uses: appleboy/ssh-action@v0.1.9
+        with:
+          host: ec2-3-133-115-8.us-east-2.compute.amazonaws.com
+          username: ec2-user
+          key: ${{ secrets.EC2_KEY }}
+          port: 22
+          script: |
+            cd ~/calendarmeet-app
+            # Kill any existing server.js processes
+            pkill -f "node server.js" || true
+            # Start the server in background
+            nohup node server.js > log.txt 2>&1 &
