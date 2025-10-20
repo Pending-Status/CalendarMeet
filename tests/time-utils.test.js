@@ -1,6 +1,6 @@
 // File: /tests/time-utils.test.js
 // Note: You must update the require path based on where you place the utility file.
-const { isTimeSlotFree } = require('../src/utils/time-utils'); 
+import { isTimeSlotFree } from '../time-utils.js'; 
 
 describe('Time Utilities: isTimeSlotFree', () => {
     // A fixed set of busy times to test against

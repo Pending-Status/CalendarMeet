@@ -29,4 +29,4 @@ function isTimeSlotFree(startTime, endTime, busySlots) {
   return true; // No conflicts found
 }
 
-module.exports = { isTimeSlotFree };
+export { isTimeSlotFree };
