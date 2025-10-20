@@ -52,7 +52,7 @@ jobs:
         run: |
           rm -rf deploy || true
           mkdir deploy
-          cp -r calendarmeet-app/dist deploy/
+          cp -r calendarmeet-app/dist/* deploy/
           cp server.js package.json package-lock.json deploy/
 
       # Upload build and server files as artifact
@@ -67,7 +67,7 @@ jobs:
     needs: build-and-test
     if: github.ref == 'refs/heads/main'
     steps:
-      # Checkout code again
+      # Checkout repository
       - name: Checkout repository
         uses: actions/checkout@v4
 
@@ -86,7 +86,11 @@ jobs:
           username: ec2-user
           key: ${{ secrets.EC2_KEY }}
           port: 22
-          source: ./calendarmeet/*
+          source: |
+            ./calendarmeet/server.js
+            ./calendarmeet/package.json
+            ./calendarmeet/package-lock.json
+            ./calendarmeet/dist
           target: /home/ec2-user/calendarmeet-app
 
       # SSH into EC2 and restart Node server
@@ -99,8 +103,8 @@ jobs:
           port: 22
           script: |
             cd /home/ec2-user/calendarmeet-app
-            rm -rf dist
             npm ci
             pkill -f "node server.js" || true
+            sleep 2
             nohup node server.js > log.txt 2>&1 &
-            exit 0
+            echo "Deployment complete"
