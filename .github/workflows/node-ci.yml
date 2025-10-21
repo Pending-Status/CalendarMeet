@@ -41,10 +41,15 @@ jobs:
       # Build React frontend
       - name: Build React frontend
         run: |
-          if [ -d "calendarmeet-app" ]; then
-            cd calendarmeet-app
-            npm ci
-            npm run build
+          cd calendarmeet-app
+          npm ci
+          npm run build
+      
+      - name: Verify dist exists
+        run: |
+          if [ ! -d "calendarmeet-app/dist" ]; then
+            echo "Error: dist folder not found!"
+            exit 1
           fi
 
       # Copy backend files to EC2 root home
@@ -92,7 +97,7 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           port: 22
           script: |
-            cd /home/ec2-user/calendarmeet-app
+            cd /home/ec2-user
             pm2 delete server || true
             pm2 start server.js --name server
             pm2 save
