@@ -70,9 +70,9 @@ jobs:
           port: 22
           key: ${{ secrets.EC2_KEY }}
           source: |
-            server.js
-            package.json
-            time-utils.js
+            ./server.js
+            ./package.json
+            ./time-utils.js
           target: "/home/ec2-user"
 
       # Clean old frontend build on EC2
