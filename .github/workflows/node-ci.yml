@@ -41,10 +41,8 @@ jobs:
       # Build React frontend
       - name: Build React frontend
         run: |
-          cd calendarmeet-app
-          npm ci
-          npm run build
-          cd ..
+          npm --prefix calendarmeet-app ci
+          npm --prefix calendarmeet-app run build
       
       - name: Verify dist exists
         run: |
@@ -86,7 +84,7 @@ jobs:
           username: ec2-user
           port: 22
           key: ${{ secrets.EC2_KEY }}
-          source: "calendarmeet-app/dist/**"
+          source: "calendarmeet-app/dist"
           target: "/home/ec2-user/calendarmeet-app/dist"
 
       # Restart Node.js server
