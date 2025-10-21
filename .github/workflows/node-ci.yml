@@ -30,19 +30,21 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      # Install dependencies
+      - name: Setup pnpm
+        run: npm install -g pnpm
+
       - name: Install dependencies
-        run: npm ci
+        run: pnpm install --frozen-lockfile
 
       # Run tests (CI)
       - name: Run tests
-        run: npm test
+        run: pnpm test
 
       # Build React frontend
       - name: Build React frontend
         run: |
-          npm install --prefix calendarmeet-app
-          npm run build --prefix calendarmeet-app
+          pnpm install --prefix calendarmeet-app
+          pnpm run build --prefix calendarmeet-app
       
       - name: Verify dist exists
         run: |
@@ -63,7 +65,7 @@ jobs:
           username: ec2-user
           port: 22
           key: ${{ secrets.EC2_KEY }}
-          source: "server.js package.json package-lock.json time-utils.js"
+          source: "server*.js package*.json time-utils.js"
           target: "/home/ec2-user"
 
       # Clean old frontend build on EC2
