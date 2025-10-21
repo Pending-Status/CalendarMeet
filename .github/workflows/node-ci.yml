@@ -59,11 +59,7 @@ jobs:
           username: ec2-user
           port: 22
           key: ${{ secrets.EC2_KEY }}
-          source: |
-            server.js
-            package.json
-            package-lock.json
-            time-utils.js
+          source: "server.js package.json package-lock.json time-utils.js"
           target: "/home/ec2-user"
 
       # Clean old frontend build on EC2
