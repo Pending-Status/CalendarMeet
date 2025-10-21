@@ -47,19 +47,44 @@ jobs:
             npm run build
           fi
 
-      # Copy entire project to EC2
-      - name: Copy project to EC2
+      # Copy backend files to EC2 root home
+      - name: Copy backend files to EC2
         uses: appleboy/scp-action@master
         with:
           host: ec2-3-133-115-8.us-east-2.compute.amazonaws.com
           username: ec2-user
           port: 22
           key: ${{ secrets.EC2_KEY }}
-          source: "."
-          target: "~/calendarmeet-app"
+          source: |
+            server.js
+            package.json
+            package-lock.json
+            time-utils.js
+          target: "/home/ec2-user"
 
-      # Start Node.js server on EC2
-      - name: Start Node.js server
+      # Clean old frontend build on EC2
+      - name: Clean old frontend build on EC2
+        uses: appleboy/ssh-action@v0.1.9
+        with:
+          host: ec2-3-133-115-8.us-east-2.compute.amazonaws.com
+          username: ec2-user
+          key: ${{ secrets.EC2_KEY }}
+          port: 22
+          script: rm -rf /home/ec2-user/calendarmeet-app/dist/*
+
+      # Copy frontend build (dist) to EC2 calendarmeet-app folder
+      - name: Copy frontend build to EC2
+        uses: appleboy/scp-action@master
+        with:
+          host: ec2-3-133-115-8.us-east-2.compute.amazonaws.com
+          username: ec2-user
+          port: 22
+          key: ${{ secrets.EC2_KEY }}
+          source: "calendarmeet-app/dist/**"
+          target: "/home/ec2-user/calendarmeet-app/dist"
+
+      # Restart Node.js server
+      - name: Restart Node.js server
         uses: appleboy/ssh-action@v0.1.9
         with:
           host: ec2-3-133-115-8.us-east-2.compute.amazonaws.com
@@ -67,10 +92,7 @@ jobs:
           key: ${{ secrets.EC2_KEY }}
           port: 22
           script: |
-            cd ~/calendarmeet-app
-            # Stop existing server if running
+            cd /home/ec2-user/calendarmeet-app
             pm2 delete server || true
-            # Start server with pm2
             pm2 start server.js --name server
-            # Save pm2 process list to respawn on reboot
             pm2 save
