@@ -50,6 +50,10 @@ jobs:
             echo "Error: dist folder not found!"
             exit 1
           fi
+      
+      - name: Verify backend files exist
+        run: |
+          ls -l server.js package.json package-lock.json time-utils.js
 
       # Copy backend files to EC2 root home
       - name: Copy backend files to EC2
@@ -80,7 +84,7 @@ jobs:
           username: ec2-user
           port: 22
           key: ${{ secrets.EC2_KEY }}
-          source: "calendarmeet-app/dist"
+          source: "calendarmeet-app/dist/*"
           target: "/home/ec2-user/calendarmeet-app/dist"
 
       # Restart Node.js server
