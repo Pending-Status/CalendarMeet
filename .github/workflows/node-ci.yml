@@ -41,8 +41,8 @@ jobs:
       # Build React frontend
       - name: Build React frontend
         run: |
-          npm --prefix calendarmeet-app ci
-          npm --prefix calendarmeet-app run build
+          npm install --prefix calendarmeet-app
+          npm run build --prefix calendarmeet-app
       
       - name: Verify dist exists
         run: |
