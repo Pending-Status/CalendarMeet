@@ -1,4 +1,4 @@
-name: Node.js CI + Optional CD for CalendarMeet
+name: Node.js CI/CD for CalendarMeet
 
 on:
   push:
@@ -11,23 +11,19 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout code
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      # Set up pnpm 
       - name: Setup pnpm
         uses: pnpm/action-setup@v4
         with:
           version: 9
 
-      # Cache pnpm store
       - name: Cache pnpm store
         uses: actions/cache@v3
         with:
@@ -36,15 +32,12 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-
 
-      # Install backend dependencies (root)
       - name: Install backend dependencies
         run: pnpm install --frozen-lockfile
 
-      # Run backend tests
       - name: Run tests
         run: pnpm test || echo "No tests found, skipping"
 
-      # Build React frontend
       - name: Build React frontend
         run: |
           pnpm --dir calendarmeet-app install --frozen-lockfile
@@ -61,7 +54,6 @@ jobs:
         run: |
           ls -l server.js package.json time-utils.js
 
-      # Copy server.js
       - name: Copy server.js
         uses: appleboy/scp-action@master
         with:
@@ -72,7 +64,6 @@ jobs:
           source: "./server.js"
           target: "/home/ec2-user"
 
-      # Copy package.json
       - name: Copy package.json
         uses: appleboy/scp-action@master
         with:
@@ -83,7 +74,6 @@ jobs:
           source: "./package.json"
           target: "/home/ec2-user"
 
-      # Copy time-utils.js
       - name: Copy time-utils.js
         uses: appleboy/scp-action@master
         with:
@@ -94,8 +84,8 @@ jobs:
           source: "./time-utils.js"
           target: "/home/ec2-user"
 
-      # Clean old calendarmeet-app folder on EC2
-      - name: Clean old frontend folder on EC2
+      # prevents duplicate
+      - name: Delete old calendarmeet-app folder on EC2
         uses: appleboy/ssh-action@v0.1.9
         with:
           host: ec2-3-133-115-8.us-east-2.compute.amazonaws.com
@@ -104,8 +94,7 @@ jobs:
           port: 22
           script: rm -rf /home/ec2-user/calendarmeet-app
 
-      # Copy entire frontend (calendarmeet-app) to EC2
-      - name: Copy full frontend folder to EC2
+      - name: Copy calendarmeet-app folder to EC2
         uses: appleboy/scp-action@master
         with:
           host: ec2-3-133-115-8.us-east-2.compute.amazonaws.com
@@ -115,7 +104,6 @@ jobs:
           source: "calendarmeet-app"
           target: "/home/ec2-user"
 
-      # Restart Node.js server
       - name: Restart Node.js server
         uses: appleboy/ssh-action@v0.1.9
         with:
