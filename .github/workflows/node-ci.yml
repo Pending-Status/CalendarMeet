@@ -94,26 +94,26 @@ jobs:
           source: "./time-utils.js"
           target: "/home/ec2-user"
 
-      # Clean old frontend build on EC2
-      - name: Clean old frontend build on EC2
+      # Clean old calendarmeet-app folder on EC2
+      - name: Clean old frontend folder on EC2
         uses: appleboy/ssh-action@v0.1.9
         with:
           host: ec2-3-133-115-8.us-east-2.compute.amazonaws.com
           username: ec2-user
           key: ${{ secrets.EC2_KEY }}
           port: 22
-          script: rm -rf /home/ec2-user/calendarmeet-app/dist/*
+          script: rm -rf /home/ec2-user/calendarmeet-app
 
-      # Copy frontend build (dist) to EC2 calendarmeet-app folder
-      - name: Copy frontend build to EC2
+      # Copy entire frontend (calendarmeet-app) to EC2
+      - name: Copy full frontend folder to EC2
         uses: appleboy/scp-action@master
         with:
           host: ec2-3-133-115-8.us-east-2.compute.amazonaws.com
           username: ec2-user
           port: 22
           key: ${{ secrets.EC2_KEY }}
-          source: "calendarmeet-app/dist/*"
-          target: "/home/ec2-user/calendarmeet-app/dist"
+          source: "calendarmeet-app"
+          target: "/home/ec2-user"
 
       # Restart Node.js server
       - name: Restart Node.js server
