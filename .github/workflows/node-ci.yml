@@ -61,18 +61,37 @@ jobs:
         run: |
           ls -l server.js package.json time-utils.js
 
-      # Copy backend files to EC2 root home
-      - name: Copy backend files to EC2
+      # Copy server.js
+      - name: Copy server.js
         uses: appleboy/scp-action@master
         with:
           host: ec2-3-133-115-8.us-east-2.compute.amazonaws.com
           username: ec2-user
           port: 22
           key: ${{ secrets.EC2_KEY }}
-          source: |
-            ./server.js
-            ./package.json
-            ./time-utils.js
+          source: "./server.js"
+          target: "/home/ec2-user"
+
+      # Copy package.json
+      - name: Copy package.json
+        uses: appleboy/scp-action@master
+        with:
+          host: ec2-3-133-115-8.us-east-2.compute.amazonaws.com
+          username: ec2-user
+          port: 22
+          key: ${{ secrets.EC2_KEY }}
+          source: "./package.json"
+          target: "/home/ec2-user"
+
+      # Copy time-utils.js
+      - name: Copy time-utils.js
+        uses: appleboy/scp-action@master
+        with:
+          host: ec2-3-133-115-8.us-east-2.compute.amazonaws.com
+          username: ec2-user
+          port: 22
+          key: ${{ secrets.EC2_KEY }}
+          source: "./time-utils.js"
           target: "/home/ec2-user"
 
       # Clean old frontend build on EC2
