@@ -5,8 +5,18 @@ import interactionPlugin from "@fullcalendar/interaction";
 import { Link } from "react-router-dom";
 
 // 🔥 Firebase imports
-import { db } from "../firebaseConfig";
-import { collection, addDoc, deleteDoc, onSnapshot, doc } from "firebase/firestore";
+import {
+  db,
+  // ensure your firebaseConfig exports `db`
+} from "../firebaseConfig";
+import {
+  collection,
+  addDoc,
+  deleteDoc,
+  onSnapshot,
+  doc,
+  updateDoc,
+} from "firebase/firestore";
 
 const CalendarPage = () => {
   const [events, setEvents] = useState([]);
@@ -21,10 +31,9 @@ const CalendarPage = () => {
     hobby: "",
   });
 
-  // 🗑️ Deletion modal state
+  // 🗑️ Modal state for viewing/deleting events
   const [showDeleteModal, setShowDeleteModal] = useState(false);
-  const [selectedEvent, setSelectedEvent] = useState(null);     // { id, title, date, ... }
-
+  const [selectedEvent, setSelectedEvent] = useState(null); // { id, title, date, ... }
 
   // ✅ Load events in real-time from Firestore
   useEffect(() => {
@@ -44,15 +53,16 @@ const CalendarPage = () => {
     setShowModal(true);
   };
 
-    // ✅ When user clicks an existing event → open delete confirm
+  // ✅ When user clicks an existing event → open centered modal
   const handleEventClick = (clickInfo) => {
+    clickInfo.jsEvent.preventDefault(); // stop FullCalendar’s default popover
+
     const e = clickInfo.event;
-    // Build a clean object with the fields we store
     const formatted = {
       id: e.id,
       title: e.title,
-      date: e.startStr, // dayGrid month uses all-day dates
-      ...e.extendedProps, // time, location, type, etc.
+      date: e.startStr,
+      ...e.extendedProps,
     };
     setSelectedEvent(formatted);
     setShowDeleteModal(true);
@@ -67,7 +77,6 @@ const CalendarPage = () => {
   const handleSubmit = async () => {
     let title = formData.type;
 
-    // Build the title based on type
     if (formData.type === "studying" && formData.subject)
       title += ` - ${formData.subject}`;
     if (formData.type === "basketball" && formData.sport)
@@ -81,12 +90,12 @@ const CalendarPage = () => {
       time: formData.time,
       location: formData.location,
       type: formData.type,
+      interested: 0,
     };
 
     try {
       await addDoc(collection(db, "events"), newEvent);
       setShowModal(false);
-      // reset form
       setFormData({
         type: "",
         time: "",
@@ -100,7 +109,7 @@ const CalendarPage = () => {
     }
   };
 
-   // Delete event from Firestore
+  // ✅ Delete event from Firestore
   const handleDeleteEvent = async () => {
     if (!selectedEvent?.id) return;
     try {
@@ -114,6 +123,7 @@ const CalendarPage = () => {
 
   return (
     <div className="min-h-screen bg-gradient-to-r from-green-700 to-yellow-500 p-8 text-white">
+      {/* Header */}
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-3xl font-bold">Event Calendar</h1>
         <Link
@@ -129,7 +139,13 @@ const CalendarPage = () => {
         <FullCalendar
           plugins={[dayGridPlugin, interactionPlugin]}
           initialView="dayGridMonth"
-          events={events}
+          events={events.map((e) => ({
+            ...e,
+            title:
+              e.interested && e.interested > 0
+                ? `${e.title} (${e.interested} interested)`
+                : e.title,
+          }))}
           dateClick={handleDateClick}
           eventClick={handleEventClick}
           height="80vh"
@@ -157,7 +173,6 @@ const CalendarPage = () => {
                   <option value="">Select</option>
                   <option value="studying">Studying</option>
                   <option value="basketball">Basketball</option>
-                  <option value="hobby">Hobby</option>
                 </select>
               </div>
 
@@ -188,18 +203,7 @@ const CalendarPage = () => {
                 </div>
               )}
 
-              {formData.type === "hobby" && (
-                <div>
-                  <label className="block font-semibold mb-1">Hobby:</label>
-                  <input
-                    name="hobby"
-                    type="text"
-                    placeholder="e.g. Painting, Gaming"
-                    onChange={handleChange}
-                    className="border border-gray-300 rounded-lg w-full p-2 focus:ring-2 focus:ring-green-400 focus:outline-none"
-                  />
-                </div>
-              )}
+              
 
               {/* Time */}
               <div>
@@ -246,11 +250,13 @@ const CalendarPage = () => {
         </div>
       )}
 
-      {/* Delete Confirm Modal */}
+      {/* Event Details / Delete Modal */}
       {showDeleteModal && selectedEvent && (
         <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-50">
           <div className="bg-white text-black p-6 rounded-xl w-96 shadow-xl">
-            <h3 className="text-xl font-bold text-red-600 mb-3">Delete Event?</h3>
+            <h3 className="text-xl font-bold text-green-700 mb-3">
+              Event Details
+            </h3>
             <p className="text-sm text-gray-700 mb-4">
               <span className="font-semibold">{selectedEvent.title}</span>
               <br />
@@ -258,6 +264,44 @@ const CalendarPage = () => {
               {selectedEvent.time ? ` • ${selectedEvent.time}` : ""}
               {selectedEvent.location ? ` • ${selectedEvent.location}` : ""}
             </p>
+
+            {/* Interested Count */}
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm font-semibold text-gray-600">
+                Interested: {selectedEvent.interested ?? 0}
+              </p>
+              <button
+                onClick={async () => {
+                  if (!selectedEvent?.id) return;
+                  try {
+                    const docRef = doc(db, "events", selectedEvent.id);
+                    const newValue =
+                      selectedEvent.interested &&
+                      selectedEvent.interested > 0
+                        ? 0
+                        : 1;
+                    await updateDoc(docRef, { interested: newValue });
+                    setSelectedEvent({
+                      ...selectedEvent,
+                      interested: newValue,
+                    });
+                  } catch (error) {
+                    console.error("Error updating interest:", error);
+                  }
+                }}
+                className={`${
+                  selectedEvent.interested && selectedEvent.interested > 0
+                    ? "bg-yellow-400 text-black"
+                    : "bg-green-600 text-white"
+                } px-4 py-2 rounded-lg font-semibold transition hover:opacity-90`}
+              >
+                {selectedEvent.interested && selectedEvent.interested > 0
+                  ? "Interested"
+                  : "I'm Interested"}
+              </button>
+            </div>
+
+            {/* Delete and Close Buttons */}
             <div className="flex gap-3">
               <button
                 onClick={handleDeleteEvent}
@@ -272,12 +316,9 @@ const CalendarPage = () => {
                 }}
                 className="bg-gray-200 text-black px-4 py-2 rounded-lg hover:bg-gray-300 transition font-semibold flex-1"
               >
-                Cancel
+                Close
               </button>
             </div>
-            <p className="text-xs text-gray-500 mt-3">
-              Tip: You can delete any event by clicking it on the calendar.
-            </p>
           </div>
         </div>
       )}
