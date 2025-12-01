@@ -1,6 +1,6 @@
 // File: /tests/time-utils.test.js
 // Note: You must update the require path based on where you place the utility file.
-import { isTimeSlotFree } from '../time-utils.js'; 
+import { isTimeSlotFree, findConflicts } from '../time-utils.js'; 
 
 describe('Time Utilities: isTimeSlotFree', () => {
     // A fixed set of busy times to test against
@@ -79,4 +79,23 @@ describe('Time Utilities: isTimeSlotFree', () => {
         );
         expect(isFree).toBe(false);
     });
-});
+
+    describe('findConflicts', () => {
+        test('returns overlapping slots', () => {
+            const conflicts = findConflicts(
+                { start: '2025-10-20T10:30:00Z', end: '2025-10-20T12:00:00Z' },
+                busySlots
+            );
+            expect(conflicts.length).toBe(1);
+            expect(conflicts[0].start).toBe('2025-10-20T10:00:00Z');
+        });
+
+        test('returns empty for invalid proposed range', () => {
+            const conflicts = findConflicts(
+                { start: 'bad', end: 'also-bad' },
+                busySlots
+            );
+            expect(conflicts.length).toBe(0);
+        });
+    });
+}); 

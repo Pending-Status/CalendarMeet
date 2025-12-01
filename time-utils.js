@@ -29,4 +29,25 @@ function isTimeSlotFree(startTime, endTime, busySlots) {
   return true; // No conflicts found
 }
 
+export function findConflicts(proposed, busySlots) {
+  const { start, end } = proposed;
+  const conflicts = [];
+  const startMs = new Date(start).getTime();
+  const endMs = new Date(end).getTime();
+  if (Number.isNaN(startMs) || Number.isNaN(endMs) || startMs >= endMs) {
+    return conflicts;
+  }
+
+  for (const slot of busySlots) {
+    const busyStart = new Date(slot.start).getTime();
+    const busyEnd = new Date(slot.end).getTime();
+    if (Number.isNaN(busyStart) || Number.isNaN(busyEnd)) continue;
+    if (startMs < busyEnd && endMs > busyStart) {
+      conflicts.push(slot);
+    }
+  }
+
+  return conflicts;
+}
+
 export { isTimeSlotFree };

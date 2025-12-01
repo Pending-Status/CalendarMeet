@@ -18,11 +18,13 @@ app.get('/erik', (req, res) => {
     res.send('Hello, my name is Erik. My interests include gaming and cybersecurity.');
 });
 
-app.listen(PORT, () => {
-    console.log(`Server running at http://localhost:${PORT}`);
-});
+const shouldListen = process.env.NODE_ENV !== 'test' && process.env.JEST_WORKER_ID === undefined;
+if (shouldListen) {
+    app.listen(PORT, () => {
+        console.log(`Server running at http://localhost:${PORT}`);
+    });
+}
 
 export default app;
-
 
 

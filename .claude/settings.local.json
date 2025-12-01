@@ -1,0 +1,17 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(echo:*)",
+      "Bash(dangerouslyDisableSandbox=true /usr/local/bin/node --version)",
+      "Bash(/opt/homebrew/bin/node:*)",
+      "Bash(/opt/homebrew/bin/npm run dev)",
+      "Bash(PATH=\"/opt/homebrew/bin:$PATH\" /opt/homebrew/bin/npm run dev:*)",
+      "Bash(PATH=\"/opt/homebrew/bin:/bin:/usr/bin:/usr/local/bin:$PATH\" /opt/homebrew/bin/npx vite:*)",
+      "Bash(PGPASSWORD=1234 psql:*)",
+      "Bash(PATH=\"/opt/homebrew/bin:$PATH\" /opt/homebrew/bin/npm install:*)",
+      "Bash(curl:*)"
+    ],
+    "deny": [],
+    "ask": []
+  }
+}

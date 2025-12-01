@@ -3,9 +3,9 @@ import { app, __setEvents, __getEvents } from '../app.js';
 
 const iso = (d) => new Date(d).toISOString();
 
-beforeEach(() => {
+beforeEach(async () => {
     process.env.NODE_ENV = 'test';
-    __setEvents([
+    await __setEvents([
         { id: 'a', title: 'A', start: iso('2024-01-01T10:00:00Z'), end: iso('2024-01-01T11:00:00Z') },
         { id: 'b', title: 'B', start: iso('2024-01-02T10:00:00Z') },
     ]);
@@ -43,10 +43,11 @@ describe('GET /events', () => {
 
 describe('POST /events', () => {
 test('creates an event', async () => {
-    const res = await request(app).post('/events').send({ title: 'C', start: iso('2024-01-03T10:00:00Z') });
+        const res = await request(app).post('/events').send({ title: 'C', start: iso('2024-01-03T10:00:00Z'), type: 'study', recurrence: { freq: 'weekly' } });
         expect(res.status).toBe(201);
         expect(res.body.id).toBeTruthy();
-        expect(__getEvents().length).toBe(3);
+        expect((await __getEvents()).length).toBe(3);
+        expect(res.body.type).toBe('study');
 });
     test('validates required fields', async () => {
     const res = await request(app).post('/events').send({ title: '' });
@@ -95,7 +96,8 @@ describe('DELETE /events/:id', () => {
 test('deletes', async () => {
     const res = await request(app).delete('/events/a');
     expect(res.status).toBe(204);
-    expect(__getEvents().find((e) => e.id === 'a')).toBeUndefined();
+    const events = await __getEvents();
+    expect(events.find((e) => e.id === 'a')).toBeUndefined();
 });
 test('404 on missing', async () => {
     const res = await request(app).delete('/events/missing');
