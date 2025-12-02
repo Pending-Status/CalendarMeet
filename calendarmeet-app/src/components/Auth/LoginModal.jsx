@@ -5,9 +5,11 @@ import toast from 'react-hot-toast';
 const LoginModal = ({ isOpen, onClose, onSwitchToSignup }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [resetCode, setResetCode] = useState('');
+  const [newPassword, setNewPassword] = useState('');
   const [loading, setLoading] = useState(false);
-  const [mode, setMode] = useState('login'); // login | reset
-  const { signin, signInWithGoogle, resetPassword } = useAuth();
+  const [mode, setMode] = useState('login'); // login | reset-request | reset-confirm
+  const { signin, signInWithGoogle, requestPasswordReset, confirmPasswordReset } = useAuth();
 
   if (!isOpen) return null;
 
@@ -27,29 +29,54 @@ const LoginModal = ({ isOpen, onClose, onSwitchToSignup }) => {
         onClose();
       } catch (error) {
         console.error('Login error:', error);
-        if (error.code === 'auth/user-not-found' || error.code === 'auth/wrong-password') {
+        const errorMessage = error?.message || '';
+        if (errorMessage.includes('Incorrect username or password')) {
           toast.error('Invalid email or password');
-        } else if (error.code === 'auth/too-many-requests') {
+        } else if (errorMessage.includes('User is not confirmed')) {
+          toast.error('Please verify your email before logging in');
+        } else if (errorMessage.includes('User does not exist')) {
+          toast.error('No account found with this email');
+        } else if (errorMessage.includes('too many')) {
           toast.error('Too many attempts. Please try again later');
+        } else if (error?.message) {
+          toast.error(error.message);
         } else {
           toast.error('Failed to log in. Please try again');
         }
       } finally {
         setLoading(false);
       }
-    } else {
+    } else if (mode === 'reset-request') {
       if (!email) {
         toast.error('Enter your email to reset password');
         return;
       }
       setLoading(true);
       try {
-        await resetPassword(email);
-        toast.success('Reset link sent. Check your inbox.');
-        setMode('login');
+        await requestPasswordReset(email);
+        toast.success('Reset code sent. Check your email.');
+        setMode('reset-confirm');
       } catch (error) {
         console.error('Reset error:', error);
-        toast.error('Failed to send reset email');
+        toast.error(error?.message || 'Failed to send reset email');
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      if (!email || !resetCode || !newPassword) {
+        toast.error('Fill in email, code, and new password');
+        return;
+      }
+      setLoading(true);
+      try {
+        await confirmPasswordReset(email, resetCode, newPassword);
+        toast.success('Password updated. You can log in now.');
+        setMode('login');
+        setResetCode('');
+        setNewPassword('');
+      } catch (error) {
+        console.error('Confirm reset error:', error);
+        toast.error(error?.message || 'Failed to reset password');
       } finally {
         setLoading(false);
       }
@@ -64,7 +91,7 @@ const LoginModal = ({ isOpen, onClose, onSwitchToSignup }) => {
       onClose();
     } catch (error) {
       console.error('Google sign-in error:', error);
-      toast.error('Failed to sign in with Google');
+      toast.error(error?.message || 'Failed to sign in with Google');
     } finally {
       setLoading(false);
     }
@@ -82,7 +109,13 @@ const LoginModal = ({ isOpen, onClose, onSwitchToSignup }) => {
         </button>
 
         <h2 className="text-3xl font-bold text-green-700 mb-2">Welcome Back</h2>
-        <p className="text-gray-600 mb-6">Log in to your account</p>
+        <p className="text-gray-600 mb-6">
+          {mode === 'login'
+            ? 'Log in to your account'
+            : mode === 'reset-request'
+            ? 'Request a reset code'
+            : 'Confirm password reset'}
+        </p>
 
         <form onSubmit={handleSubmit} className="space-y-4">
           <div>
@@ -109,14 +142,51 @@ const LoginModal = ({ isOpen, onClose, onSwitchToSignup }) => {
               onChange={(e) => setPassword(e.target.value)}
               className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
               placeholder="••••••••"
-              disabled={loading}
+              disabled={loading || mode !== 'login'}
             />
           </div>
+
+          {mode === 'reset-confirm' && (
+            <>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  Reset Code
+                </label>
+                <input
+                  type="text"
+                  value={resetCode}
+                  onChange={(e) => setResetCode(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
+                  placeholder="Enter the code emailed to you"
+                  disabled={loading}
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-semibold text-gray-700 mb-2">
+                  New Password
+                </label>
+                <input
+                  type="password"
+                  value={newPassword}
+                  onChange={(e) => setNewPassword(e.target.value)}
+                  className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:outline-none"
+                  placeholder="New password"
+                  disabled={loading}
+                />
+              </div>
+            </>
+          )}
 
           <div className="flex justify-between items-center text-sm text-green-700">
             <button
               type="button"
-              onClick={() => setMode(mode === 'login' ? 'reset' : 'login')}
+              onClick={() =>
+                setMode(
+                  mode === 'login'
+                    ? 'reset-request'
+                    : 'login'
+                )
+              }
               className="font-semibold hover:text-green-800"
               disabled={loading}
             >
@@ -129,7 +199,17 @@ const LoginModal = ({ isOpen, onClose, onSwitchToSignup }) => {
             disabled={loading}
             className="w-full bg-gradient-to-r from-green-600 to-green-700 text-white font-semibold py-3 rounded-lg hover:from-green-700 hover:to-green-800 transition disabled:opacity-50 disabled:cursor-not-allowed"
           >
-            {mode === 'login' ? (loading ? 'Logging in...' : 'Log In') : (loading ? 'Sending...' : 'Send reset link')}
+            {mode === 'login'
+              ? loading
+                ? 'Logging in...'
+                : 'Log In'
+              : mode === 'reset-request'
+              ? loading
+                ? 'Sending...'
+                : 'Send reset code'
+              : loading
+              ? 'Saving...'
+              : 'Confirm new password'}
           </button>
         </form>
 

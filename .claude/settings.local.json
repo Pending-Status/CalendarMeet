@@ -9,7 +9,13 @@
       "Bash(PATH=\"/opt/homebrew/bin:/bin:/usr/bin:/usr/local/bin:$PATH\" /opt/homebrew/bin/npx vite:*)",
       "Bash(PGPASSWORD=1234 psql:*)",
       "Bash(PATH=\"/opt/homebrew/bin:$PATH\" /opt/homebrew/bin/npm install:*)",
-      "Bash(curl:*)"
+      "Bash(curl:*)",
+      "Bash(aws cognito-idp update-user-pool-client:*)",
+      "Bash(lsof:*)",
+      "Bash(/opt/homebrew/bin/npx vite)",
+      "Bash(/usr/bin/git status)",
+      "Bash(/usr/bin/git add calendarmeet-app/src/components/CalendarPage.tsx)",
+      "Bash(/usr/bin/git add -A)"
     ],
     "deny": [],
     "ask": []

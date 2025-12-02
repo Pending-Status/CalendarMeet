@@ -7,6 +7,9 @@ import {
   fetchUserAttributes,
   updateUserAttributes,
   confirmSignUp,
+  resetPassword,
+  confirmResetPassword,
+  signInWithRedirect,
   type SignUpOutput
 } from 'aws-amplify/auth';
 import '../awsConfig';
@@ -37,6 +40,9 @@ type AuthContextValue = {
   ) => Promise<SignUpOutput>;
   confirmSignup: (email: string, code: string) => Promise<void>;
   signin: (email: string, password: string) => Promise<any>;
+  requestPasswordReset: (email: string) => Promise<void>;
+  confirmPasswordReset: (email: string, code: string, newPassword: string) => Promise<void>;
+  signInWithGoogle: () => Promise<void>;
   logout: () => Promise<void>;
   updateUserProfile: (updates: Partial<UserProfile>) => Promise<void>;
   loading: boolean;
@@ -98,6 +104,29 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
       password,
     });
     return result;
+  };
+
+  // Hosted UI: Google federation (requires OAuth config in awsConfig)
+  const signInWithGoogle = async () => {
+    try {
+      console.log('Attempting Google sign-in with redirect...');
+      await signInWithRedirect({ provider: 'Google' });
+    } catch (error) {
+      console.error('Google sign-in error details:', error);
+      throw new Error(error?.message || 'Google sign-in failed. Please check OAuth configuration.');
+    }
+  };
+
+  const requestPasswordReset = async (email: string) => {
+    await resetPassword({ username: email });
+  };
+
+  const confirmPasswordReset = async (
+    email: string,
+    code: string,
+    newPassword: string
+  ) => {
+    await confirmResetPassword({ username: email, confirmationCode: code, newPassword });
   };
 
   // Sign out
@@ -188,9 +217,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     signup,
     confirmSignup,
     signin,
+    signInWithGoogle,
     logout,
     updateUserProfile,
     loading,
+    requestPasswordReset,
+    confirmPasswordReset,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

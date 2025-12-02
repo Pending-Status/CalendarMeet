@@ -9,7 +9,7 @@ import {
   updateProfile,
   User
 } from 'firebase/auth';
-import { auth, db } from '../firebaseConfig';
+import { auth, db, hasAllConfig } from '../firebaseConfig';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { sendPasswordResetEmail } from 'firebase/auth';
 
@@ -43,6 +43,7 @@ type AuthContextValue = {
   updateUserProfile: (updates: Partial<UserProfile>) => Promise<void>;
   loading: boolean;
   resetPassword: (email: string) => Promise<void>;
+  isConfigured: boolean;
 };
 
 const AuthContext = createContext<AuthContextValue | null>(null);
@@ -64,6 +65,12 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   const [userProfile, setUserProfile] = useState<UserProfile | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const ensureAuthConfigured = () => {
+    if (!hasAllConfig || !auth || !db) {
+      throw new Error('Firebase is not configured. Add VITE_FIREBASE_* env vars.');
+    }
+  };
+
   // Sign up with email and password
   const signup = async (
     email: string,
@@ -71,6 +78,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     displayName: string,
     additionalInfo: Partial<UserProfile> = {}
   ) => {
+    ensureAuthConfigured();
     const userCredential = await createUserWithEmailAndPassword(auth, email, password);
     const user = userCredential.user;
 
@@ -97,11 +105,13 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   // Sign in with email and password
   const signin = (email: string, password: string) => {
+    ensureAuthConfigured();
     return signInWithEmailAndPassword(auth, email, password);
   };
 
   // Sign in with Google
   const signInWithGoogle = async () => {
+    ensureAuthConfigured();
     const provider = new GoogleAuthProvider();
     const result = await signInWithPopup(auth, provider);
     const user = result.user;
@@ -132,15 +142,18 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
 
   // Sign out
   const logout = () => {
+    ensureAuthConfigured();
     return signOut(auth);
   };
 
   const resetPassword = async (email: string) => {
+    ensureAuthConfigured();
     await sendPasswordResetEmail(auth, email);
   };
 
   // Load user profile
   const loadUserProfile = async (uid: string) => {
+    if (!db) return;
     try {
       const userDoc = await getDoc(doc(db, 'users', uid));
       if (userDoc.exists()) {
@@ -154,6 +167,7 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   // Update user profile
   const updateUserProfile = async (updates: Partial<UserProfile>) => {
     if (!currentUser) return;
+    ensureAuthConfigured();
 
     try {
       await setDoc(doc(db, 'users', currentUser.uid), updates, { merge: true });
@@ -165,6 +179,10 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
   };
 
   useEffect(() => {
+    if (!auth) {
+      setLoading(false);
+      return;
+    }
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       setCurrentUser(user);
       if (user) {
@@ -187,7 +205,8 @@ export const AuthProvider = ({ children }: AuthProviderProps) => {
     logout,
     updateUserProfile,
     loading,
-    resetPassword
+    resetPassword,
+    isConfigured: hasAllConfig,
   };
 
   return (
