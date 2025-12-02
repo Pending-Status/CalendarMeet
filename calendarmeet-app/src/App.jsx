@@ -7,12 +7,13 @@ import ReactGA from "react-ga4";
 const MEASUREMENT_ID = "G-3JKPKPVV9C";
 ReactGA.initialize(MEASUREMENT_ID);
 
-useEffect(() => {
+function App() {
+
+  useEffect(() => {
         ReactGA.initialize('G-YOUR_ID_HERE');
         ReactGA.send({ hitType: "pageview", page: window.location.pathname });
       }, []);
-
-function App() {
+      
   return (
     <>
       <Navbar />
