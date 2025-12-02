@@ -34,13 +34,15 @@ type FirestoreEvent = {
 };
 
 type CalendarForm = {
-  type: string;
+  category: string;      // NEW (Studying / Sports / Hobby)
+  subject: string;       // For studying
+  sport: string;         // For sports
+  otherSport: string;    // If user picks "Other"
+  hobby: string;         // For hobby
   time: string;
   location: string;
-  subject: string;
-  sport: string;
-  hobby: string;
 };
+
 
 const CalendarPage: React.FC = () => {
   const [events, setEvents] = useState<FirestoreEvent[]>([]);
@@ -318,64 +320,81 @@ const CalendarPage: React.FC = () => {
             </h2>
 
             <div className="space-y-4">
-              {/* Event Type */}
+              {/* Event Category */}
               <div>
-                <label className="block font-semibold mb-1">Event Type:</label>
+                <label className="block font-semibold mb-1">Event Category:</label>
                 <select
-                  name="type"
-                  value={formData.type}
+                  name="category"
+                  value={formData.category}
                   onChange={handleChange}
-                  className="border border-gray-300 rounded-lg w-full p-2 focus:ring-2 focus:ring-green-400 focus:outline-none"
+                  className="border w-full p-2 rounded"
                 >
                   <option value="">Select</option>
                   <option value="studying">Studying</option>
-                  <option value="basketball">Basketball</option>
+                  <option value="sports">Sports</option>
                   <option value="hobby">Hobby</option>
                 </select>
               </div>
 
-              {/* Conditional fields */}
-              {formData.type === "studying" && (
+              {/* STUDYING → subject input */}
+              {formData.category === "studying" && (
                 <div>
                   <label className="block font-semibold mb-1">Subject:</label>
                   <input
                     name="subject"
                     type="text"
                     placeholder="e.g. Math 1300"
+                    value={formData.subject}
                     onChange={handleChange}
-                    className="border border-gray-300 rounded-lg w-full p-2 focus:ring-2 focus:ring-green-400 focus:outline-none"
+                    className="border w-full p-2 rounded"
                   />
                 </div>
               )}
 
-              {formData.type === "basketball" && (
+              {/* SPORTS → sport dropdown + optional text */}
+              {formData.category === "sports" && (
                 <div>
-                  <label className="block font-semibold mb-1">
-                    Sport Type:
-                  </label>
-                  <input
+                  <label className="block font-semibold mb-1">Sport:</label>
+                  <select
                     name="sport"
-                    type="text"
-                    placeholder="e.g. Pickup Game"
+                    value={formData.sport}
                     onChange={handleChange}
-                    className="border border-gray-300 rounded-lg w-full p-2 focus:ring-2 focus:ring-green-400 focus:outline-none"
-                  />
+                    className="border w-full p-2 rounded"
+                  >
+                    <option value="">Select Sport</option>
+                    <option value="Basketball">Basketball</option>
+                    <option value="Football">Football</option>
+                    <option value="Soccer">Soccer</option>
+                    <option value="Volleyball">Volleyball</option>
+                    <option value="Other">Other</option>
+                  </select>
+
+                  {formData.sport === "Other" && (
+                    <input
+                      name="otherSport"
+                      type="text"
+                      placeholder="Enter sport"
+                      onChange={handleChange}
+                      className="border w-full p-2 rounded mt-2"
+                    />
+                  )}
                 </div>
               )}
 
-              {formData.type === "hobby" && (
+              {/* HOBBY → free text */}
+              {formData.category === "hobby" && (
                 <div>
                   <label className="block font-semibold mb-1">Hobby:</label>
                   <input
                     name="hobby"
                     type="text"
                     placeholder="e.g. Painting"
+                    value={formData.hobby}
                     onChange={handleChange}
-                    className="border border-gray-300 rounded-lg w-full p-2 focus:ring-2 focus:ring-green-400 focus:outline-none"
+                    className="border w-full p-2 rounded"
                   />
                 </div>
               )}
-
               {/* Time */}
               <div>
                 <label className="block font-semibold mb-1">Time:</label>

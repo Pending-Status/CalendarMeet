@@ -34,6 +34,7 @@ console.log("LOADED ENV:", {
   domain: import.meta.env.VITE_AWS_OAUTH_DOMAIN,
   redirect: import.meta.env.VITE_AWS_OAUTH_REDIRECT_URL
 });
+console.log("ENV TEST", import.meta.env.VITE_AWS_REGION);
 
 // Configure AWS Amplify LAST
 Amplify.configure(awsConfig);
