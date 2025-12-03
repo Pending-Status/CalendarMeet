@@ -151,89 +151,113 @@ const CalendarPage: React.FC = () => {
 
   // ✅ Add event to Firestore
   const handleSubmit = async () => {
-    if (!selectedDate) {
-      setError("Pick a date on the calendar first.");
-      return;
-    }
+  // ---------------------------
+  // VALIDATION
+  // ---------------------------
 
-    if (!formData.type) {
-      setError("Event type is required.");
-      return;
-    }
+  if (!selectedDate) {
+    setError("Pick a date on the calendar first.");
+    return;
+  }
 
-    if (!formData.time) {
-      setError("Time is required.");
-      return;
-    }
+  if (!formData.category) {
+    setError("Event category is required.");
+    return;
+  }
 
-    if (!formData.location.trim()) {
-      setError("Location is required.");
-      return;
-    }
+  if (!formData.time) {
+    setError("Time is required.");
+    return;
+  }
 
-    if (formData.type === "studying" && !formData.subject.trim()) {
-      setError("Subject is required for studying events.");
-      return;
-    }
+  if (!formData.location.trim()) {
+    setError("Location is required.");
+    return;
+  }
 
-    if (formData.type === "basketball" && !formData.sport.trim()) {
-      setError("Sport type is required for basketball events.");
-      return;
-    }
+  // Studying → subject required
+  if (formData.category === "studying" && !formData.subject.trim()) {
+    setError("Subject is required for studying events.");
+    return;
+  }
 
-    if (formData.type === "hobby" && !formData.hobby.trim()) {
-      setError("Hobby name is required for hobby events.");
-      return;
-    }
+  // Sports → sport required
+  if (formData.category === "sports" && !formData.sport.trim()) {
+    setError("Sport type is required.");
+    return;
+  }
 
-    setError("");
-    setSubmitting(true);
+  // Hobby → hobby name required
+  if (formData.category === "hobby" && !formData.hobby.trim()) {
+    setError("Hobby name is required.");
+    return;
+  }
 
-    let title = formData.type;
+  setError("");
+  setSubmitting(true);
 
-    if (formData.type === "studying" && formData.subject)
-      title += ` - ${formData.subject}`;
-    if (formData.type === "basketball" && formData.sport)
-      title += ` - ${formData.sport}`;
-    if (formData.type === "hobby" && formData.hobby)
-      title += ` - ${formData.hobby}`;
+  // ---------------------------
+  // BUILD EVENT TITLE
+  // ---------------------------
+  let title = formData.category;
 
-    const newEvent = {
-      title,
-      date: selectedDate,
-      time: formData.time,
-      location: formData.location,
-      type: formData.type,
-      createdAt: serverTimestamp(),
-      interested: 0,
-    };
+  if (formData.category === "studying" && formData.subject)
+    title += ` - ${formData.subject}`;
 
-    try {
-      if (!db) {
-        toast.error(
-          "Calendar feature temporarily disabled - Firebase migration in progress"
-        );
-        return;
-      }
-      await addDoc(collection(db, "events"), newEvent);
-      setShowModal(false);
-      setFormData({
-        type: "",
-        time: "",
-        location: "",
-        subject: "",
-        sport: "",
-        hobby: "",
-      });
-      toast.success("Event created");
-    } catch (error) {
-      console.error("Error adding event:", error);
-      setError("Failed to create event. Please try again.");
-      toast.error("Failed to create event");
-    } finally {
-      setSubmitting(false);
-    }
+  if (formData.category === "sports" && formData.sport)
+    title += ` - ${formData.sport}`;
+
+  if (formData.category === "hobby" && formData.hobby)
+    title += ` - ${formData.hobby}`;
+
+  // ---------------------------
+  // NEW EVENT OBJECT
+  // ---------------------------
+  const newEvent = {
+    title,
+    date: selectedDate,
+    time: formData.time,
+    location: formData.location,
+    type: formData.category,
+    createdAt: serverTimestamp(),
+    interested: 0,
   };
+
+  // ---------------------------
+  // FIREBASE WRITE
+  // ---------------------------
+  try {
+    if (!db) {
+      toast.error(
+        "Calendar feature temporarily disabled - Firebase migration in progress"
+      );
+      return;
+    }
+
+    await addDoc(collection(db, "events"), newEvent);
+
+    // Reset UI
+    setShowModal(false);
+    setFormData({
+      category: "",
+      subject: "",
+      sport: "",
+      hobby: "",
+      time: "",
+      location: "",
+      otherSport: "",
+    });
+
+    toast.success("Event created!");
+  } catch (error) {
+    console.error("Error adding event:", error);
+    setError("Failed to create event. Please try again.");
+    toast.error("Failed to create event");
+  } finally {
+    setSubmitting(false);
+  }
+};
+
 
   // ✅ Delete event from Firestore
   const handleDeleteEvent = async () => {
