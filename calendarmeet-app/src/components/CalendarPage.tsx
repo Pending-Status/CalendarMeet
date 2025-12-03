@@ -53,13 +53,15 @@ const CalendarPage: React.FC = () => {
   const [submitting, setSubmitting] = useState(false);
   const [error, setError] = useState<string>("");
   const [formData, setFormData] = useState<CalendarForm>({
-    type: "",
-    time: "",
-    location: "",
-    subject: "",
-    sport: "",
-    hobby: "",
-  });
+  category: "",
+  subject: "",
+  sport: "",
+  otherSport: "",
+  hobby: "",
+  time: "",
+  location: "",
+});
+
   const addNotification = useStore((s) => s.addNotification);
   const initialSyncDone = useRef(false);
 
@@ -72,11 +74,9 @@ const CalendarPage: React.FC = () => {
   useEffect(() => {
     // Firebase is temporarily disabled - skip Firestore operations
     if (!db) {
-      console.log(
-        "Firebase Firestore is disabled - using PostgreSQL backend instead"
-      );
-      return;
-    }
+  console.error("Firestore not initialized!");
+  }
+
 
     const eventsRef = collection(db, "events");
     const unsubscribe = onSnapshot(eventsRef, (snapshot) => {
