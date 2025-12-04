@@ -7,8 +7,6 @@ import { Link } from "react-router-dom";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import toast from "react-hot-toast";
 import { useStore } from "../store/useStore";
-import { useAuth } from "../contexts/AuthContextCognito"; 
-
 
 // 🔥 Firebase imports
 import { db } from "../firebaseConfig";
@@ -32,12 +30,8 @@ type FirestoreEvent = {
   time?: string;
   location?: string;
   interested?: number;
-  createdById?: string;
-  createdByName?: string;
   [key: string]: unknown;
 };
-
-const { userProfile } = useAuth();
 
 type CalendarForm = {
   category: string;      // NEW (Studying / Sports / Hobby)
@@ -227,11 +221,6 @@ const CalendarPage: React.FC = () => {
     type: formData.category,
     createdAt: serverTimestamp(),
     interested: 0,
-    createdById: userProfile?.uid ?? null,
-    createdByName:
-      userProfile?.displayName ??
-      userProfile?.email ??
-      "Unknown user",
   };
 
   // ---------------------------
@@ -497,12 +486,6 @@ const CalendarPage: React.FC = () => {
               {selectedEvent.time ? ` • ${selectedEvent.time}` : ""}
               {selectedEvent.location ? ` • ${selectedEvent.location}` : ""}
             </p>
-
-            {selectedEvent.createdByName && (
-              <p className="text-xs text-gray-500 mb-4">
-                Created by {selectedEvent.createdByName}
-              </p>
-            )}
 
             {/* Interested Count */}
             <div className="flex items-center justify-between mb-4">
