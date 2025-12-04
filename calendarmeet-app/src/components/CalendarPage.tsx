@@ -312,7 +312,7 @@ const CalendarPage: React.FC = () => {
           >
             <option value="all">All</option>
             <option value="studying">Studying</option>
-            <option value="basketball">Basketball</option>
+            <option value="sports">Sports</option>
             <option value="hobby">Hobby</option>
           </select>
         </div>
