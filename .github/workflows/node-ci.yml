@@ -46,11 +46,6 @@ jobs:
 
       - name: Run tests
         run: pnpm test || echo "No tests found, skipping"
-
-      - name: Build React frontend
-        run: |
-          pnpm --dir calendarmeet-app install --frozen-lockfile
-          pnpm --dir calendarmeet-app run build
       
       - name: Verify dist exists
         run: |
