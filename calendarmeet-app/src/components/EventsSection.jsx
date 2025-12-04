@@ -35,7 +35,7 @@ const EventsSection = () => {
 
   const getEmojiForType = (type) => {
     if (type === "studying") return "📚";
-    if (type === "sports") return "🏀";
+    if (type === "sports") return "🏅";
     if (type === "hobby") return "🎨";
     return "📅";
   };
