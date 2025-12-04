@@ -37,8 +37,8 @@ type CalendarForm = {
   category: string;      // NEW (Studying / Sports / Hobby)
   subject: string;       // For studying
   sport: string;         // For sports
-  otherSport: string;    // If user picks "Other"
-  hobby: string;         // For hobby
+  otherSport: string;    
+  hobby: string;         
   time: string;
   location: string;
 };
