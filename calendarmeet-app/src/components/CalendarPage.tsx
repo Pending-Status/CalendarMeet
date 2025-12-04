@@ -7,7 +7,7 @@ import { Link } from "react-router-dom";
 import { MagnifyingGlassIcon } from "@heroicons/react/24/outline";
 import toast from "react-hot-toast";
 import { useStore } from "../store/useStore";
-
+import { increment } from "firebase/firestore";
 // 🔥 Firebase imports
 import { db } from "../firebaseConfig";
 import {
@@ -493,39 +493,25 @@ const CalendarPage: React.FC = () => {
                 Interested: {selectedEvent.interested ?? 0}
               </p>
               <button
-                onClick={async () => {
-                  if (!selectedEvent?.id) return;
-                  try {
-                    if (!db) {
-                      toast.error(
-                        "Calendar feature temporarily disabled - Firebase migration in progress"
-                      );
-                      return;
-                    }
-                    const docRef = doc(db, "events", selectedEvent.id);
-                    const newValue =
-                      selectedEvent.interested && selectedEvent.interested > 0
-                        ? 0
-                        : 1;
-                    await updateDoc(docRef, { interested: newValue });
-                    setSelectedEvent({
-                      ...selectedEvent,
-                      interested: newValue,
-                    });
-                  } catch (error) {
-                    console.error("Error updating interest:", error);
-                  }
-                }}
-                className={`${
-                  selectedEvent.interested && selectedEvent.interested > 0
-                    ? "bg-yellow-400 text-black"
-                    : "bg-green-600 text-white"
-                } px-4 py-2 rounded-lg font-semibold transition hover:opacity-90`}
-              >
-                {selectedEvent.interested && selectedEvent.interested > 0
-                  ? "Interested"
-                  : "I'm Interested"}
-              </button>
+              onClick={async () => {
+                if (!selectedEvent?.id) return;
+
+                try {
+                  const docRef = doc(db, "events", selectedEvent.id);
+                  await updateDoc(docRef, { interested: increment(1) });
+
+                  setSelectedEvent({
+                    ...selectedEvent,
+                    interested: (selectedEvent.interested || 0) + 1,
+                  });
+                } catch (error) {
+                  console.error("Error updating interest:", error);
+                }
+              }}
+              className="bg-green-600 text-white px-4 py-2 rounded-lg font-semibold transition hover:opacity-90"
+            >
+              I'm Interested
+            </button>
             </div>
 
             {/* Delete and Close Buttons */}
