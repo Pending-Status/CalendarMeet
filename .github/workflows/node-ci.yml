@@ -36,6 +36,14 @@ jobs:
       - name: Install root dependencies
         run: pnpm install --frozen-lockfile
 
+      - name: Install frontend dependencies
+        working-directory: calendarmeet-app
+        run: pnpm install --frozen-lockfile
+
+      - name: Build React frontend
+        working-directory: calendarmeet-app
+        run: pnpm run build
+
       - name: Run tests
         run: pnpm test || echo "No tests found, skipping"
 
