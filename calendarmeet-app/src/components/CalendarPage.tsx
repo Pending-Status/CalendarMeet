@@ -514,7 +514,7 @@ const CalendarPage: React.FC = () => {
             </button>
             </div>
 
-            {/* Delete and Close Buttons */}
+            {}
             <div className="flex gap-3">
               <button
                 onClick={handleDeleteEvent}
