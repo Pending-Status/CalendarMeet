@@ -10,6 +10,7 @@ import {
 
 const EventsSection = () => {
   const [events, setEvents] = useState([]);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     const eventsRef = collection(db, "events");
@@ -17,8 +18,7 @@ const EventsSection = () => {
     // Get the 5 soonest upcoming events
     const q = query(
       eventsRef,
-      orderBy("date", "asc"),
-      orderBy("time", "asc"),
+      orderBy("createdAt", "asc"),
       limit(5)
     );
 
@@ -28,7 +28,13 @@ const EventsSection = () => {
         ...doc.data(),
       }));
       setEvents(eventData);
-    });
+      setLoading(false);
+    },
+    (error) => {
+      console.error("Error fetching events:", error);
+      setLoading(false);
+    }
+    );
 
     return () => unsubscribe();
   }, []);
