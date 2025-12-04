@@ -32,7 +32,8 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pnpm-
 
-      - name: Install backend dependencies
+        # Install ALL root dependencies (server + shared, if any)
+      - name: Install root dependencies
         run: pnpm install --frozen-lockfile
 
       - name: Run tests
